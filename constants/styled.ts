@@ -36,7 +36,7 @@ const styled = {
       redButton: '#cc5858',
     },
     blue: {
-      standardIosBlue: 'rgb(0, 122, 255)',
+      standardIosBlue: '#C2DFEA',
     },
   },
   spaceVertical: {

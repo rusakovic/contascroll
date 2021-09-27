@@ -1,15 +1,13 @@
-import React, {FC, useEffect, useState} from 'react';
+import React, {FC, useRef, useState} from 'react';
 import {
   View,
-  Text,
-  FlatList,
   SafeAreaView,
-  Image,
   Platform,
   ScrollView,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Pressable,
+  Animated,
 } from 'react-native';
 import {
   heightPercentageToDP as hp,
@@ -64,6 +62,7 @@ const ContactElement: FC = ({
 
 const ContactScreen: FC = () => {
   const contactsArray = Object.values(contacts.users);
+  const usersCount = contactsArray.length;
   const contactsArrayLength = contactsArray.length;
   const refScrollHorizontalView: React.MutableRefObject<ScrollView> =
     React.useRef();
@@ -71,38 +70,90 @@ const ContactScreen: FC = () => {
   const refFlatlistVertical: React.MutableRefObject<ScrollView> =
     React.useRef();
 
+  const scrollX = useRef(new Animated.Value(0)).current;
+  console.log('🚀 ~ file: ContactScreen.tsx ~ line 210 ~ scrollX', scrollX);
+  const scrollY = useRef(new Animated.Value(0)).current;
   const itemWidth = wp(35);
   const itemHeight = hp(95);
+
+  const lengthX = (usersCount - 1) * itemWidth;
   const proportion = itemHeight / itemWidth;
   const [currentPositionX, setCurrentPositionX] = useState(0);
   const [currentPositionY, setCurrentPositionY] = useState(0);
-  const [isManualScrollVertical, setIsManualScrollVertical] = useState(false);
+
+  const [isHorizontalScrolling, setIsHorizontalScrolling] = useState(false);
+  console.log(
+    '🚀 ~ file: ContactScreen.tsx ~ line 90 ~ isHorizontalScrolling',
+    isHorizontalScrolling,
+  );
+  const [isVerticalScrolling, setIsVerticalScrolling] = useState(false);
+  console.log(
+    '🚀 ~ file: ContactScreen.tsx ~ line 92 ~ isVerticalScrolling',
+    isVerticalScrolling,
+  );
+
+  const [isManualSelectionContact, setIsManualSelectionContact] =
+    useState(false);
 
   const [currentPositionIndex, setCurrentPositionIndex] = useState(0);
+  console.log(
+    '🚀 ~ file: ContactScreen.tsx ~ line 91 ~ currentPositionIndex',
+    currentPositionIndex,
+  );
   const [currentPositionIndexDescription, setCurrentPositionIndexDescription] =
     useState(0);
 
   const onScrollHorizontal = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setCurrentPositionX(e.nativeEvent.contentOffset.x);
+    const positionX = e.nativeEvent.contentOffset.x;
+    if (
+      !isVerticalScrolling &&
+      !isManualSelectionContact &&
+      isHorizontalScrolling
+    ) {
+      setCurrentPositionX(positionX);
+      if (refFlatlistVertical.current != null) {
+        refFlatlistVertical.current.scrollTo({
+          x: 0,
+          y: positionX * proportion - wp(15),
+          animated: false,
+        });
+      }
 
-    if (refFlatlistVertical.current != null && isManualScrollVertical) {
-      refFlatlistVertical.current.scrollTo({
-        x: 0,
-        y: e.nativeEvent.contentOffset.x * proportion,
-        animated: true,
-      });
+      setCurrentPositionY(e.nativeEvent.contentOffset.y);
     }
-    setCurrentPositionY(e.nativeEvent.contentOffset.y);
-  };
-  const onScrollVertical = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setCurrentPositionY(e.nativeEvent.contentOffset.y);
+    if (positionX < itemWidth / 2) {
+      setCurrentPositionIndex(0);
+    } else if (positionX > lengthX - itemWidth / 2) {
+      setCurrentPositionIndex(usersCount - 1);
+    } else {
+      const positionCalc = Math.trunc((positionX + itemWidth / 2) / itemWidth);
+      setCurrentPositionIndex(positionCalc);
+    }
   };
 
+  const onScrollVertical = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (
+      !isHorizontalScrolling &&
+      !isManualSelectionContact &&
+      isVerticalScrolling
+    ) {
+      const positionY = e.nativeEvent.contentOffset.y;
+      if (refScrollHorizontalView.current != null) {
+        refScrollHorizontalView.current.scrollTo({
+          x: positionY / proportion + wp(2),
+          y: 0,
+          animated: false,
+        });
+      }
+      setCurrentPositionY(positionY);
+    }
+  };
   const onChangedContact = (index: number) => {
     setCurrentPositionIndex(index);
   };
 
   const scrollToPosition = (position: number) => {
+    setIsManualSelectionContact(true);
     const x = position * itemWidth;
     const y = position * itemHeight;
     // setIsManualScrollVertical(true);
@@ -125,32 +176,28 @@ const ContactScreen: FC = () => {
     }
   };
 
-  const snapTimer = async () => {
-    const nextPosition = Math.round(currentPositionX / itemWidth);
-    console.log('yes');
-    scrollToPosition(nextPosition);
-    // await setTimeout(() => {
-    // }, 100);
+  // const snapTimer = async () => {
+  //   const nextPosition = Math.round(currentPositionX / itemWidth);
+  //   scrollToPosition(nextPosition);
+  // };
+
+  const onDragScrollHorizontalBegin = () => {
+    setIsHorizontalScrolling(true);
   };
 
-  const onMomentumScrollBegin = () => {
-    setIsManualScrollVertical(false);
-  };
-
-  const onMomentumScrollEnd = () => {
-    if (isManualScrollVertical) {
-      setIsManualScrollVertical(false);
+  const onMomentumScrollHorizontalEnd = () => {
+    if (isHorizontalScrolling) {
+      setIsHorizontalScrolling(false);
     }
+    setIsManualSelectionContact(false);
   };
 
-  const onScrollBeginDrag = () => {
-    setIsManualScrollVertical(true);
+  const onMomentumScrollVerticalEnd = () => {
+    setIsVerticalScrolling(false);
   };
 
-  const onScrollEndDrag = () => {
-    if (isManualScrollVertical) {
-      setIsManualScrollVertical(false);
-    }
+  const onDragScrollVerticalStart = () => {
+    setIsVerticalScrolling(true);
   };
 
   return (
@@ -160,31 +207,45 @@ const ContactScreen: FC = () => {
           horizontal
           scrollEventThrottle={16}
           ref={refScrollHorizontalView}
-          decelerationRate={Platform.OS === 'ios' ? 0.5 : 0.9}
+          decelerationRate={Platform.OS === 'ios' ? 0.99 : 0.9}
           showsHorizontalScrollIndicator={false}
           snapToAlignment="center"
           snapToInterval={wp(35)}
+          scrollEnabled={!isVerticalScrolling && !isManualSelectionContact}
           onScroll={onScrollHorizontal}
-          onScrollBeginDrag={onScrollBeginDrag}
-          onScrollEndDrag={onScrollEndDrag}
+          onScrollBeginDrag={onDragScrollHorizontalBegin}
+          onMomentumScrollEnd={onMomentumScrollHorizontalEnd}
           contentContainerStyle={{
-            paddingHorizontal: Platform.OS === 'android' ? wp(32) : wp(35),
+            paddingHorizontal: Platform.OS === 'android' ? wp(32) : wp(34),
           }}>
           {contactsArray.map((item, index) => (
             <Pressable key={index} onPress={() => scrollToPosition(index)}>
-              <CircleAvatar avatarUri={item.picture.medium} />
+              <CircleAvatar
+                avatarUri={item.picture.medium}
+                isFocused={index === currentPositionIndex}
+              />
             </Pressable>
           ))}
         </ScrollView>
+
         <ContainerSpace mtS />
         <ScrollView
           ref={refFlatlistVertical}
           snapToAlignment="start"
           snapToStart
           scrollEventThrottle={16}
-          onScroll={onScrollVertical}
+          scrollEnabled={!isHorizontalScrolling && !isManualSelectionContact}
           snapToInterval={hp(95)}
-          decelerationRate={Platform.OS === 'ios' ? 0 : 0.9}>
+          onScroll={onScrollVertical}
+          decelerationRate={Platform.OS === 'ios' ? 100 : 0.9}
+          onScrollBeginDrag={onDragScrollVerticalStart}
+          onMomentumScrollEnd={onMomentumScrollVerticalEnd}
+          contentInset={{
+            top: 0,
+            left: 0,
+            bottom: wp(5),
+            right: 0,
+          }}>
           {contactsArray.map((item, index) => (
             <ContactElement
               name={item.name.first}
@@ -195,6 +256,7 @@ const ContactScreen: FC = () => {
             />
           ))}
         </ScrollView>
+
         <ContainerSpace />
       </SafeAreaView>
     </View>
