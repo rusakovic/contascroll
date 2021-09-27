@@ -20,6 +20,7 @@ import Routes from '@routes';
 import {ContactElement} from '@components/molecules';
 import {UserName, UserPicture, UserType} from '@globalTypes/UserType';
 import {ContactScreenStyles} from './styles';
+import {findSelectedContactIndex} from './utils';
 
 const ContactScreen: FC = () => {
   const {navigate} = useNavigation();
@@ -36,7 +37,6 @@ const ContactScreen: FC = () => {
   const refFlatlistVertical: React.MutableRefObject<ScrollView> =
     React.useRef();
 
-  const lengthX = (usersCount - 1) * itemWidth;
   const proportion = itemHeight / itemWidth;
 
   const [isHorizontalScrolling, setIsHorizontalScrolling] = useState(false);
@@ -63,14 +63,13 @@ const ContactScreen: FC = () => {
         });
       }
     }
-    if (positionX < itemWidth / 2) {
-      setCurrentPositionIndex(0);
-    } else if (positionX > lengthX - itemWidth / 2) {
-      setCurrentPositionIndex(usersCount - 1);
-    } else {
-      const positionCalc = Math.trunc((positionX + itemWidth / 2) / itemWidth);
-      setCurrentPositionIndex(positionCalc);
-    }
+
+    const currentIndex = findSelectedContactIndex(
+      positionX,
+      itemWidth,
+      usersCount,
+    );
+    setCurrentPositionIndex(currentIndex);
   };
 
   const onDragScrollHorizontalBegin = () => {
@@ -228,13 +227,7 @@ const ContactScreen: FC = () => {
           onScroll={onScrollVertical}
           decelerationRate={Platform.OS === 'ios' ? 100 : 0.9}
           onScrollBeginDrag={onDragScrollVerticalStart}
-          onMomentumScrollEnd={onMomentumScrollVerticalEnd}
-          contentInset={{
-            top: 0,
-            left: 0,
-            bottom: wp(5),
-            right: 0,
-          }}>
+          onMomentumScrollEnd={onMomentumScrollVerticalEnd}>
           {renderDescriptionElement()}
         </ScrollView>
 

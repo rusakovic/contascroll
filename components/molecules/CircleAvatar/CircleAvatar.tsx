@@ -1,10 +1,15 @@
 import React, {useEffect, useRef} from 'react';
-import {Animated, Image, View} from 'react-native';
-import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
-import styled from '../../../constants/styled';
-import ContainerCenter from '../../atoms/Containers/ContainerCenter';
+import {Animated, Image} from 'react-native';
+import {UserPicture} from '@globalTypes/UserType';
+import ContainerCenter from '@components/atoms/Containers/ContainerCenter';
+import {CircleAvatarStyles} from './styles';
 
-interface CircleAvatarProps {}
+interface CircleAvatarProps {
+  avatarUri: UserPicture['medium'];
+  isFocused: boolean;
+}
+
+const FADE_DURATION = 300;
 
 const CircleAvatar: React.FunctionComponent<CircleAvatarProps> = ({
   avatarUri,
@@ -16,43 +21,24 @@ const CircleAvatar: React.FunctionComponent<CircleAvatarProps> = ({
     if (isFocused) {
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 300,
+        duration: FADE_DURATION,
         useNativeDriver: true,
       }).start();
     } else {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 300,
+        duration: FADE_DURATION,
         useNativeDriver: true,
       }).start();
     }
   }, [isFocused, fadeAnim]);
+
   return (
-    <ContainerCenter
-      style={{
-        marginHorizontal: wp(5),
-        marginVertical: wp(6),
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
+    <ContainerCenter style={CircleAvatarStyles.mainWrapper}>
       <Animated.View
-        style={{
-          borderRadius: wp(25),
-          backgroundColor: styled.colors.blue.standardIosBlue,
-          opacity: fadeAnim,
-          position: 'absolute',
-          height: wp(27),
-          width: wp(27),
-        }}
+        style={[CircleAvatarStyles.imageWithBorder, {opacity: fadeAnim}]}
       />
-      <Image
-        source={{uri: avatarUri}}
-        style={{
-          height: wp(25),
-          width: wp(25),
-          borderRadius: wp(25),
-        }}
-      />
+      <Image source={{uri: avatarUri}} style={CircleAvatarStyles.image} />
     </ContainerCenter>
   );
 };
