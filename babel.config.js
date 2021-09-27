@@ -21,6 +21,8 @@ module.exports = {
           '@screens': './screens',
           '@constants': './constants',
           '@mocks': './mocks',
+          '@routes': './routes',
+          '@globalTypes': './globalTypes',
         },
       },
     ],

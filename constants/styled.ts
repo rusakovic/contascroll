@@ -30,6 +30,7 @@ const styled = {
     white: {
       white: '#FFF',
       white60opacity: 'rgba(255,255,255,0.6)',
+      navigatorHeader: '#F6F6F6',
     },
 
     red: {

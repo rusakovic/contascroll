@@ -1,4 +1,4 @@
-import React, {FC, useRef, useState} from 'react';
+import React, {FC, useState} from 'react';
 import {
   View,
   SafeAreaView,
@@ -7,105 +7,47 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Pressable,
-  Animated,
 } from 'react-native';
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
-import ContainerSpace from '../../components/atoms/Containers/ContainerSpace';
-import DefaultText from '../../components/atoms/Text/DefaultText/DefaultText';
+import ContainerSpace from '@components/atoms/Containers/ContainerSpace';
 import {contacts} from '@mocks/contactsData';
-import ContainerCenter from '../../components/atoms/Containers/ContainerCenter';
-import {CircleAvatar} from '../../components/molecules';
+import {CircleAvatar} from '@components/molecules';
 import {useNavigation} from '@react-navigation/native';
-import {Routes} from '../../routes/routes';
-
-const ContactElement: FC = ({
-  name,
-  surname,
-  avatarUri,
-  aboutMe,
-  city,
-  country,
-}) => {
-  return (
-    <View
-      style={{
-        height: hp(90),
-        marginBottom: hp(5),
-      }}>
-      <ContainerCenter isContainer alignItemsCenter>
-        <ContainerCenter flexDirectionRow>
-          <DefaultText fontFamilyBold>{name}</DefaultText>
-          <DefaultText marginLeftCustom={wp(2)}>{surname}</DefaultText>
-        </ContainerCenter>
-
-        <DefaultText numberOfLines={20} xs fitText={false}>
-          {city}, {country}
-        </DefaultText>
-        <ContainerSpace mtM />
-        <ContainerCenter>
-          <DefaultText fontFamilyBold s>
-            About me
-          </DefaultText>
-          <DefaultText
-            numberOfLines={20}
-            xs
-            fitText={false}
-            marginTopCustom={wp(1)}>
-            {aboutMe}
-          </DefaultText>
-        </ContainerCenter>
-      </ContainerCenter>
-    </View>
-  );
-};
+import Routes from '@routes';
+import {ContactElement} from '@components/molecules';
+import {UserName, UserPicture, UserType} from '@globalTypes/UserType';
+import {ContactScreenStyles} from './styles';
 
 const ContactScreen: FC = () => {
   const {navigate} = useNavigation();
-  const contactsArray = Object.values(contacts.users);
+  const contactsArray: UserType[] = Object.values(contacts.users);
   const usersCount = contactsArray.length;
   const contactsArrayLength = contactsArray.length;
+
+  const itemWidth = wp(35);
+  const itemHeight = hp(95);
+
   const refScrollHorizontalView: React.MutableRefObject<ScrollView> =
     React.useRef();
 
   const refFlatlistVertical: React.MutableRefObject<ScrollView> =
     React.useRef();
 
-  const scrollX = useRef(new Animated.Value(0)).current;
-  console.log('🚀 ~ file: ContactScreen.tsx ~ line 210 ~ scrollX', scrollX);
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const itemWidth = wp(35);
-  const itemHeight = hp(95);
-
   const lengthX = (usersCount - 1) * itemWidth;
   const proportion = itemHeight / itemWidth;
-  const [currentPositionX, setCurrentPositionX] = useState(0);
-  const [currentPositionY, setCurrentPositionY] = useState(0);
 
   const [isHorizontalScrolling, setIsHorizontalScrolling] = useState(false);
-  console.log(
-    '🚀 ~ file: ContactScreen.tsx ~ line 90 ~ isHorizontalScrolling',
-    isHorizontalScrolling,
-  );
   const [isVerticalScrolling, setIsVerticalScrolling] = useState(false);
-  console.log(
-    '🚀 ~ file: ContactScreen.tsx ~ line 92 ~ isVerticalScrolling',
-    isVerticalScrolling,
-  );
 
   const [isManualSelectionContact, setIsManualSelectionContact] =
     useState(false);
 
   const [currentPositionIndex, setCurrentPositionIndex] = useState(0);
-  console.log(
-    '🚀 ~ file: ContactScreen.tsx ~ line 91 ~ currentPositionIndex',
-    currentPositionIndex,
-  );
-  const [currentPositionIndexDescription, setCurrentPositionIndexDescription] =
-    useState(0);
 
+  // 1. HORIZONTAL SCROLLING
   const onScrollHorizontal = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const positionX = e.nativeEvent.contentOffset.x;
     if (
@@ -113,7 +55,6 @@ const ContactScreen: FC = () => {
       !isManualSelectionContact &&
       isHorizontalScrolling
     ) {
-      setCurrentPositionX(positionX);
       if (refFlatlistVertical.current != null) {
         refFlatlistVertical.current.scrollTo({
           x: 0,
@@ -121,8 +62,6 @@ const ContactScreen: FC = () => {
           animated: false,
         });
       }
-
-      setCurrentPositionY(e.nativeEvent.contentOffset.y);
     }
     if (positionX < itemWidth / 2) {
       setCurrentPositionIndex(0);
@@ -134,23 +73,17 @@ const ContactScreen: FC = () => {
     }
   };
 
-  const onScrollVertical = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (
-      !isHorizontalScrolling &&
-      !isManualSelectionContact &&
-      isVerticalScrolling
-    ) {
-      const positionY = e.nativeEvent.contentOffset.y;
-      if (refScrollHorizontalView.current != null) {
-        refScrollHorizontalView.current.scrollTo({
-          x: positionY / proportion + wp(2),
-          y: 0,
-          animated: false,
-        });
-      }
-      setCurrentPositionY(positionY);
-    }
+  const onDragScrollHorizontalBegin = () => {
+    setIsHorizontalScrolling(true);
   };
+
+  const onMomentumScrollHorizontalEnd = () => {
+    if (isHorizontalScrolling) {
+      setIsHorizontalScrolling(false);
+    }
+    setIsManualSelectionContact(false);
+  };
+
   const onChangedContact = (index: number) => {
     setCurrentPositionIndex(index);
   };
@@ -159,7 +92,6 @@ const ContactScreen: FC = () => {
     setIsManualSelectionContact(true);
     const x = position * itemWidth;
     const y = position * itemHeight;
-    // setIsManualScrollVertical(true);
     if (refScrollHorizontalView.current != null) {
       refScrollHorizontalView.current.scrollTo({x, y: 0, animated: true});
     }
@@ -179,20 +111,36 @@ const ContactScreen: FC = () => {
     }
   };
 
-  // const snapTimer = async () => {
-  //   const nextPosition = Math.round(currentPositionX / itemWidth);
-  //   scrollToPosition(nextPosition);
-  // };
-
-  const onDragScrollHorizontalBegin = () => {
-    setIsHorizontalScrolling(true);
+  const onNavigateToProfileDetailHandler = (
+    avatar: UserPicture['large'],
+    name: UserName['first'],
+    surname: UserName['last'],
+    aboutMe: UserType['aboutMe'],
+  ) => {
+    navigate(Routes.ContactDetails, {
+      avatar,
+      name,
+      surname,
+      aboutMe,
+    });
   };
 
-  const onMomentumScrollHorizontalEnd = () => {
-    if (isHorizontalScrolling) {
-      setIsHorizontalScrolling(false);
+  // 2. VERTICAL SCROLLING
+  const onScrollVertical = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (
+      !isHorizontalScrolling &&
+      !isManualSelectionContact &&
+      isVerticalScrolling
+    ) {
+      const positionY = e.nativeEvent.contentOffset.y;
+      if (refScrollHorizontalView.current != null) {
+        refScrollHorizontalView.current.scrollTo({
+          x: positionY / proportion + wp(2),
+          y: 0,
+          animated: false,
+        });
+      }
     }
-    setIsManualSelectionContact(false);
   };
 
   const onMomentumScrollVerticalEnd = () => {
@@ -203,18 +151,52 @@ const ContactScreen: FC = () => {
     setIsVerticalScrolling(true);
   };
 
-  const onNavigateToProfileDetailHandler = (avatar, name, surname, aboutMe) => {
-    navigate(Routes.ContactDetails, {
-      avatar,
-      name,
-      surname,
-      aboutMe,
-    });
+  // 3. COMPONENT ELEMENTS
+  const renderAvatarElement = () => {
+    return contactsArray.map(
+      (
+        {picture: {thumbnail, large, medium}, name: {first, last}, aboutMe},
+        index,
+      ) => {
+        return (
+          // DISCUSS: Should we move Pressable inside 'CircleAvatar'?
+          // or we reuse it in different places ?
+          <Pressable
+            key={thumbnail}
+            onPress={() =>
+              index === currentPositionIndex
+                ? onNavigateToProfileDetailHandler(large, first, last, aboutMe)
+                : scrollToPosition(index)
+            }>
+            <CircleAvatar
+              avatarUri={medium}
+              isFocused={index === currentPositionIndex}
+            />
+          </Pressable>
+        );
+      },
+    );
+  };
+
+  const renderDescriptionElement = () => {
+    return contactsArray.map(
+      ({name: {first, last}, location: {city, country}, aboutMe}, index) => (
+        <ContactElement
+          key={index}
+          name={first}
+          surname={last}
+          aboutMe={aboutMe}
+          city={city}
+          country={country}
+        />
+      ),
+    );
   };
 
   return (
-    <View style={{flex: 1}}>
+    <View style={ContactScreenStyles.flexWrapper}>
       <SafeAreaView>
+        {/* HORIZONTAL SCROLL */}
         <ScrollView
           horizontal
           scrollEventThrottle={16}
@@ -222,7 +204,7 @@ const ContactScreen: FC = () => {
           decelerationRate={Platform.OS === 'ios' ? 0.99 : 0.9}
           showsHorizontalScrollIndicator={false}
           snapToAlignment="center"
-          snapToInterval={wp(35)}
+          snapToInterval={itemWidth}
           scrollEnabled={!isVerticalScrolling && !isManualSelectionContact}
           onScroll={onScrollHorizontal}
           onScrollBeginDrag={onDragScrollHorizontalBegin}
@@ -230,37 +212,19 @@ const ContactScreen: FC = () => {
           contentContainerStyle={{
             paddingHorizontal: Platform.OS === 'android' ? wp(32) : wp(34),
           }}>
-          {contactsArray.map((item, index) => {
-            return (
-              <Pressable
-                key={index}
-                onPress={() =>
-                  index === currentPositionIndex
-                    ? onNavigateToProfileDetailHandler(
-                        item.picture.large,
-                        item.name.first,
-                        item.name.last,
-                        item.aboutMe,
-                      )
-                    : scrollToPosition(index)
-                }>
-                <CircleAvatar
-                  avatarUri={item.picture.medium}
-                  isFocused={index === currentPositionIndex}
-                />
-              </Pressable>
-            );
-          })}
+          {renderAvatarElement()}
         </ScrollView>
 
         <ContainerSpace mtS />
+
+        {/* VERTICAL SCROLL */}
         <ScrollView
           ref={refFlatlistVertical}
           snapToAlignment="start"
           snapToStart
           scrollEventThrottle={16}
           scrollEnabled={!isHorizontalScrolling && !isManualSelectionContact}
-          snapToInterval={hp(95)}
+          snapToInterval={itemHeight}
           onScroll={onScrollVertical}
           decelerationRate={Platform.OS === 'ios' ? 100 : 0.9}
           onScrollBeginDrag={onDragScrollVerticalStart}
@@ -271,15 +235,7 @@ const ContactScreen: FC = () => {
             bottom: wp(5),
             right: 0,
           }}>
-          {contactsArray.map((item, index) => (
-            <ContactElement
-              name={item.name.first}
-              surname={item.name.last}
-              aboutMe={item.aboutMe}
-              city={item.location.city}
-              country={item.location.country}
-            />
-          ))}
+          {renderDescriptionElement()}
         </ScrollView>
 
         <ContainerSpace />

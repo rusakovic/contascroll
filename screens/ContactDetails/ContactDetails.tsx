@@ -1,48 +1,27 @@
 import {useRoute} from '@react-navigation/native';
 import React from 'react';
-import {Image, StyleSheet, View} from 'react-native';
+import {Image, View} from 'react-native';
 
-import {
-  heightPercentageToDP as hp,
-  widthPercentageToDP as wp,
-} from 'react-native-responsive-screen';
-import ContainerCenter from '../../components/atoms/Containers/ContainerCenter';
-import ContainerSpace from '../../components/atoms/Containers/ContainerSpace';
-import DefaultText from '../../components/atoms/Text/DefaultText/DefaultText';
+import ContainerCenter from '@components/atoms/Containers/ContainerCenter';
+import ContainerSpace from '@components/atoms/Containers/ContainerSpace';
+import DefaultText from '@components/atoms/Text/DefaultText/DefaultText';
+import {ContactDetailsStyles} from './styles';
+import {ContactDetailsRouteProps} from './types';
 
-interface ContactDetailsProps {}
-
-const ContactDetails: React.FunctionComponent<ContactDetailsProps> = props => {
+const ContactDetails: React.FunctionComponent = () => {
   const {
     params: {avatar, name, surname, aboutMe},
-  } = useRoute();
+  } = useRoute<ContactDetailsRouteProps>();
+
   return (
     <ContainerCenter isContainer isMarginVertical2>
       <ContainerCenter flexDirectionRow>
-        <View
-          style={{
-            elevation: 5,
-            borderRadius: wp(2),
-            shadowOffset: {
-              height: 10,
-              width: 0,
-            },
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-          }}>
-          <Image
-            source={{uri: avatar}}
-            style={{
-              height: wp(40),
-              width: wp(40),
-              borderRadius: wp(2),
-            }}
-          />
+        <View style={ContactDetailsStyles.imageWrapper}>
+          <Image source={{uri: avatar}} style={ContactDetailsStyles.image} />
         </View>
 
+        {/* NAME SURNAME  */}
         <ContainerCenter isContainer>
-          {/* NAME SURNAME  */}
           <ContainerCenter isMarginVertical2>
             <DefaultText l>{name}</DefaultText>
             <DefaultText fontFamilyThin>{surname}</DefaultText>
@@ -52,6 +31,8 @@ const ContactDetails: React.FunctionComponent<ContactDetailsProps> = props => {
       <ContainerSpace mtXS />
 
       <ContainerSpace mtXS />
+
+      {/* ABOUT ME */}
       <DefaultText s fontFamilyBold>
         About me:
       </DefaultText>
@@ -61,7 +42,5 @@ const ContactDetails: React.FunctionComponent<ContactDetailsProps> = props => {
     </ContainerCenter>
   );
 };
-
-const styles = StyleSheet.create({});
 
 export default ContactDetails;
