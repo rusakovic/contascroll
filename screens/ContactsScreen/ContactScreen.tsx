@@ -18,6 +18,8 @@ import DefaultText from '../../components/atoms/Text/DefaultText/DefaultText';
 import {contacts} from '@mocks/contactsData';
 import ContainerCenter from '../../components/atoms/Containers/ContainerCenter';
 import {CircleAvatar} from '../../components/molecules';
+import {useNavigation} from '@react-navigation/native';
+import {Routes} from '../../routes/routes';
 
 const ContactElement: FC = ({
   name,
@@ -61,6 +63,7 @@ const ContactElement: FC = ({
 };
 
 const ContactScreen: FC = () => {
+  const {navigate} = useNavigation();
   const contactsArray = Object.values(contacts.users);
   const usersCount = contactsArray.length;
   const contactsArrayLength = contactsArray.length;
@@ -200,6 +203,15 @@ const ContactScreen: FC = () => {
     setIsVerticalScrolling(true);
   };
 
+  const onNavigateToProfileDetailHandler = (avatar, name, surname, aboutMe) => {
+    navigate(Routes.ContactDetails, {
+      avatar,
+      name,
+      surname,
+      aboutMe,
+    });
+  };
+
   return (
     <View style={{flex: 1}}>
       <SafeAreaView>
@@ -218,14 +230,27 @@ const ContactScreen: FC = () => {
           contentContainerStyle={{
             paddingHorizontal: Platform.OS === 'android' ? wp(32) : wp(34),
           }}>
-          {contactsArray.map((item, index) => (
-            <Pressable key={index} onPress={() => scrollToPosition(index)}>
-              <CircleAvatar
-                avatarUri={item.picture.medium}
-                isFocused={index === currentPositionIndex}
-              />
-            </Pressable>
-          ))}
+          {contactsArray.map((item, index) => {
+            return (
+              <Pressable
+                key={index}
+                onPress={() =>
+                  index === currentPositionIndex
+                    ? onNavigateToProfileDetailHandler(
+                        item.picture.large,
+                        item.name.first,
+                        item.name.last,
+                        item.aboutMe,
+                      )
+                    : scrollToPosition(index)
+                }>
+                <CircleAvatar
+                  avatarUri={item.picture.medium}
+                  isFocused={index === currentPositionIndex}
+                />
+              </Pressable>
+            );
+          })}
         </ScrollView>
 
         <ContainerSpace mtS />
