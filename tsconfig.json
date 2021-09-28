@@ -91,6 +91,12 @@
     "@globalTypes": [
       "globalTypes"
     ],
+    "@decorators/*": [
+      "storybook/decorators/*"
+    ],
+    "@decorators": [
+      "storybook/decorators"
+    ],
   },
   "exclude": [
     "node_modules", "babel.config.js", "metro.config.js", "jest.config.js"

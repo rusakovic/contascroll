@@ -5,6 +5,10 @@ import {ContactDetails, ContactScreen} from '@screens';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Routes from '@routes';
 import styled from '@constants/styled';
+import Config from 'react-native-config';
+import Storybook from './storybook';
+
+const isStorybook = Config.STORYBOOK === 'true';
 
 const Navigator: React.FC = () => {
   const RootStack = createNativeStackNavigator();
@@ -61,4 +65,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default isStorybook ? Storybook : App;

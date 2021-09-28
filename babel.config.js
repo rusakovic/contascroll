@@ -23,6 +23,7 @@ module.exports = {
           '@mocks': './mocks',
           '@routes': './routes',
           '@globalTypes': './globalTypes',
+          '@decorators': './storybook/decorators',
         },
       },
     ],
