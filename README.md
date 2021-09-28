@@ -36,7 +36,7 @@ https://github.com/rusakovic/contascroll/blob/012bfea1accc85b0e450eebd8bc5532544
 7. BONUS:
 8. Reusable components: most important components are placed in `components` folder divided into `atoms` and `molecules`. `organism` folder could be addded, if necessary.
 9. For navigation to profile details, used `@react-navigation`
-
+10. `.env` files is not ignored for quicker running the app. It only contains info about Storybook.
 
 # Task
 - Please avoid using 3rd-party libraries: we want to see your code and problem solving.
